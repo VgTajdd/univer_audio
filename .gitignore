@@ -1,0 +1,11 @@
+.vs/
+x64/
+x86/
+
+*.tlog
+*.user
+*.obj
+*.ilk
+*.log
+*.pdb
+*.exe
