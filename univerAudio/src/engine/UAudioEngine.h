@@ -12,6 +12,17 @@ struct Vector3
 	float z;
 };
 
+struct USound
+{
+	std::string name;
+	float defaultVolumedB;
+	float minDistance;
+	float maxDistance;
+	bool is3d;
+	bool isLooping;
+	bool isStreaming;
+};
+
 class UAudioEngine
 {
 public:
@@ -27,15 +38,13 @@ public:
 	void setChannel3dPosition( int nChannelId, const Vector3& vPosition );
 	void setChannelVolume( int nChannelId, float fVolumedB );
 
+	void set3dListenerAndOrientation( const Vector3& vPosition, const Vector3& vLook, const Vector3& vUp );
+	void stopChannel( int nChannelId );
+	void stopAllChannels();
+	bool isPlaying( int nChannelId ) const;
+
 	float dBToVolume( float dB );
 	float volumeTodB( float volume );
-
-	// ----------- TODO ------------
-	//void set3dListenerAndOrientation(const Vector3& vPosition, const Vector3& vLook, const Vector3& vUp);
-	//void stopChannel(int nChannelId);
-	//void stopAllChannels();
-	//bool isPlaying(int nChannelId) const;
-	// ----------- TODO ------------
 };
 }
 

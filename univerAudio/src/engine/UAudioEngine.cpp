@@ -152,7 +152,7 @@ int UAudioEngine::playSound( const std::string& strSoundName, const Vector3& vPo
 		}
 	}
 	FMOD::Channel* pChannel = nullptr;
-	checkErrors( implementationPtr->system->playSound( tFoundIt->second, nullptr, true, &pChannel ) );
+	checkErrors( implementationPtr->system->playSound( tFoundIt->second, nullptr, false, &pChannel ) );
 	if ( pChannel )
 	{
 		FMOD_MODE currMode;
@@ -160,7 +160,8 @@ int UAudioEngine::playSound( const std::string& strSoundName, const Vector3& vPo
 		if ( currMode & FMOD_3D )
 		{
 			FMOD_VECTOR position = VectorToFmod( vPosition );
-			checkErrors( pChannel->set3DAttributes( &position, nullptr ) );
+			FMOD_VECTOR velocity = { 0, 0, 0 };
+			checkErrors( pChannel->set3DAttributes( &position, &velocity ) );
 		}
 		checkErrors( pChannel->setVolume( dBToVolume( fVolumedB ) ) );
 		checkErrors( pChannel->setPaused( false ) );
@@ -178,7 +179,8 @@ void UAudioEngine::setChannel3dPosition( int nChannelId, const Vector3& vPositio
 	}
 
 	FMOD_VECTOR position = VectorToFmod( vPosition );
-	checkErrors( tFoundIt->second->set3DAttributes( &position, NULL ) );
+	FMOD_VECTOR velocity = { 0, 0, 0 };
+	checkErrors( tFoundIt->second->set3DAttributes( &position, &velocity ) );
 }
 
 void UAudioEngine::setChannelVolume( int nChannelId, float fVolumedB )
@@ -190,6 +192,47 @@ void UAudioEngine::setChannelVolume( int nChannelId, float fVolumedB )
 	}
 
 	checkErrors( tFoundIt->second->setVolume( dBToVolume( fVolumedB ) ) );
+}
+
+void UAudioEngine::set3dListenerAndOrientation( const Vector3& vPosition, const Vector3& vLook, const Vector3& vUp )
+{
+	FMOD_VECTOR position = VectorToFmod( vPosition );
+	FMOD_VECTOR speed = VectorToFmod( { 0, 0, 0 } );
+	FMOD_VECTOR look = VectorToFmod( vLook );
+	FMOD_VECTOR up = VectorToFmod( vUp );
+	checkErrors( implementationPtr->system->set3DListenerAttributes( 0, &position, &speed, &look, &up ) );
+}
+
+void UAudioEngine::stopChannel( int nChannelId )
+{
+	auto tFoundIt = implementationPtr->channels.find( nChannelId );
+	if ( tFoundIt == implementationPtr->channels.end() )
+	{
+		return;
+	}
+
+	checkErrors( tFoundIt->second->stop() );
+}
+
+void UAudioEngine::stopAllChannels()
+{
+	for ( const auto& [nChannel, channel] : implementationPtr->channels )
+	{
+		checkErrors( channel->stop() );
+	}
+}
+
+bool UAudioEngine::isPlaying( int nChannelId ) const
+{
+	auto tFoundIt = implementationPtr->channels.find( nChannelId );
+	if ( tFoundIt == implementationPtr->channels.end() )
+	{
+		return false;
+	}
+
+	bool isPlaying = false;
+	checkErrors( tFoundIt->second->isPlaying( &isPlaying ) );
+	return isPlaying;
 }
 
 float UAudioEngine::dBToVolume( float dB )
