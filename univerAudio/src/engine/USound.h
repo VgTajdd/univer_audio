@@ -26,7 +26,7 @@ public:
 	bool isLooping;
 	bool isStreaming;
 
-	FMOD::Sound* mpSound = nullptr;
+	::FMOD::Sound* mpSound = nullptr;
 };
 }
 

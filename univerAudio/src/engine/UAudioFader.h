@@ -11,7 +11,7 @@ public:
 	explicit UAudioFader() {}
 public:
 	void update( const float dt ) {}
-	bool isFinished() const {}
+	bool isFinished() const { return false; }
 	void startFade( const float volume, const float a ) {}
 	void startFade( const float volume, const float a, const float b ) {}
 };
