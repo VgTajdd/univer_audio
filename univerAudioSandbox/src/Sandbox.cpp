@@ -27,9 +27,7 @@ int main()
 
 		int channelId1 = audioEngine.playSound( wauwauId, univer::audio::UVector3{ 10, 0, 0 }, audioEngine.volumeTodB( 1.0f ) );
 		std::cin.get();
-		int channelId2 = audioEngine.playSound( wauwauId, univer::audio::UVector3{ 0, 10, 0 }, audioEngine.volumeTodB( 1.0f ) );
-		std::cin.get();
-		int channelId3 = audioEngine.playSound( wauwauId, univer::audio::UVector3{ 0, 0, 10 }, audioEngine.volumeTodB( 1.0f ) );
+		int channelId2 = audioEngine.playSound( wauwauId, univer::audio::UVector3{ -1, 0, 0 }, audioEngine.volumeTodB( 1.0f ) );
 		std::cin.get();
 		audioEngine.stopAllChannels();
 		std::cin.get();
@@ -70,9 +68,9 @@ int main()
 		audioEngine.set3dListenerAndOrientation( { 0,0,0 }, { 0,0,1 }, { 0,1,0 } );
 
 		int wauwauId = audioEngine.registerSound( "assets/deepbark.wav",
+												  10.f,
 												  1.f,
-												  1.f,
-												  100.f,
+												  360.f,
 												  true,
 												  true,
 												  false,
@@ -90,7 +88,7 @@ int main()
 			std::chrono::milliseconds delta( 16 );
 			std::this_thread::sleep_for( delta );
 
-			audioEngine.setChannel3dPosition( channel, univer::audio::UVector3{ 5 * sin( TO_RADIANS * angle ), 5 * cos( TO_RADIANS * angle ), 5 * cos( TO_RADIANS * angle ) } );
+			audioEngine.setChannel3dPosition( channel, univer::audio::UVector3{ 5 * sin( TO_RADIANS * angle ), 0, 5 * cos( TO_RADIANS * angle ) } );
 			std::cout << angle++ << std::endl;
 
 			std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();

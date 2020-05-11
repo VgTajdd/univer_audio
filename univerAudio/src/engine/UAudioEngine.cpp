@@ -30,7 +30,7 @@ int checkErrors( FMOD_RESULT result )
 		std::cout << "FMOD ERROR: " << result << std::endl;
 		return 1;
 	}
-	// std::cout << "FMOD all good" << std::endl;
+	/*std::cout << "FMOD all good" << std::endl;*/
 	return 0;
 }
 
@@ -47,6 +47,7 @@ public:
 
 	bool soundIsLoaded( const int soundId );
 	void loadSound( const int soundId );
+	void unloadSound( const int soundId );
 
 	::FMOD::System* system;
 	int nextChannelId;
@@ -143,8 +144,10 @@ void UChannel::update( float fTimeDeltaSeconds )
 			auto tSoundIt = mImplementation.sounds.find( mSoundId );
 			if ( tSoundIt != mImplementation.sounds.end() )
 			{
-				mImplementation.system->playSound( tSoundIt->second->mpSound,
-												   nullptr, true, &mpChannel );
+				checkErrors( mImplementation.system->playSound( tSoundIt->second->mpSound,
+																nullptr,
+																true,
+																&mpChannel ) );
 			}
 			if ( mpChannel != nullptr )
 			{
@@ -152,10 +155,17 @@ void UChannel::update( float fTimeDeltaSeconds )
 				//	mVirtualizeFader.startFade( SILENCE_dB, 0.0f,
 				//								VIRTUALIZE_FADE_TIME );
 				meState = State::PLAYING;
-				FMOD_VECTOR position = VectorToFmod( mvPosition );
-				mpChannel->set3DAttributes( &position, nullptr );
-				mpChannel->setVolume( dBToVolume( getVolumedB() ) );
-				mpChannel->setPaused( false );
+
+				FMOD_MODE currMode;
+				checkErrors( tSoundIt->second->mpSound->getMode( &currMode ) );
+				if ( currMode & FMOD_3D )
+				{
+					FMOD_VECTOR position = VectorToFmod( mvPosition );
+					FMOD_VECTOR velocity = { 0, 0, 0 };
+					checkErrors( mpChannel->set3DAttributes( &position, &velocity ) );
+				}
+				checkErrors( mpChannel->setVolume( dBToVolume( getVolumedB() ) ) );
+				checkErrors( mpChannel->setPaused( false ) );
 			}
 			else
 			{
@@ -279,17 +289,20 @@ UAEImplementation::UAEImplementation() :
 
 UAEImplementation::~UAEImplementation()
 {
-	for ( const auto& [name, channel] : channels )
+	for ( const auto& [channelId, channel] : channels )
 	{
 		if ( channel->isPlaying() )
 		{
-			channel->mpChannel->stop();
+			checkErrors( channel->mpChannel->stop() );
 		}
 		channel->mpChannel = nullptr;
 	}
-	for ( const auto& [name, sound] : sounds )
+	for ( const auto& [soundId, sound] : sounds )
 	{
-		checkErrors( sound->mpSound->release() );
+		if ( soundIsLoaded( soundId ) )
+		{
+			unloadSound( soundId );
+		}
 		sound->mpSound = nullptr;
 	}
 	checkErrors( system->release() );
@@ -350,6 +363,20 @@ void UAEImplementation::loadSound( const int soundId )
 		checkErrors( sound->set3DMinMaxDistance( tFoundIt->second->minDistance, tFoundIt->second->maxDistance ) );
 		tFoundIt->second->mpSound = sound;
 	}
+}
+
+void UAEImplementation::unloadSound( const int soundId )
+{
+	auto tFoundIt = sounds.find( soundId );
+	if ( tFoundIt == sounds.end() )
+	{
+		return;
+	}
+	if ( tFoundIt->second->mpSound != nullptr )
+	{
+		checkErrors( tFoundIt->second->mpSound->release() );
+	}
+	tFoundIt->second->mpSound = nullptr;
 }
 
 UAEImplementation* implementationPtr = nullptr;
@@ -414,13 +441,7 @@ void UAudioEngine::loadSound( const int soundId, bool b3d, bool bLooping, bool b
 
 void UAudioEngine::unLoadSound( const int soundId )
 {
-	auto tFoundIt = implementationPtr->sounds.find( soundId );
-	if ( tFoundIt == implementationPtr->sounds.end() )
-	{
-		return;
-	}
-	checkErrors( tFoundIt->second->mpSound->release() );
-	tFoundIt->second->mpSound = nullptr;
+	implementationPtr->unloadSound( soundId );
 }
 
 int UAudioEngine::playSound( const int soundId, const UVector3& vPosition, float fVolumedB )
@@ -439,27 +460,7 @@ int UAudioEngine::playSound( const int soundId, const UVector3& vPosition, float
 																			soundId,
 																			vPosition,
 																			fVolumedB );
-
-	::FMOD::Channel* pChannel = nullptr;
-	checkErrors( implementationPtr->system->playSound( tSoundIt->second->mpSound,
-													   nullptr,
-													   false,
-													   &pChannel ) );
-
-	if ( pChannel != nullptr )
-	{
-		FMOD_MODE currMode;
-		tSoundIt->second->mpSound->getMode( &currMode );
-		if ( currMode & FMOD_3D )
-		{
-			FMOD_VECTOR position = VectorToFmod( vPosition );
-			FMOD_VECTOR velocity = { 0, 0, 0 };
-			checkErrors( pChannel->set3DAttributes( &position, &velocity ) );
-		}
-		checkErrors( pChannel->setVolume( dBToVolume( fVolumedB ) ) );
-		checkErrors( pChannel->setPaused( false ) );
-		implementationPtr->channels[nChannelId]->mpChannel = pChannel;
-	}
+	implementationPtr->channels[nChannelId]->update( 0.f );
 	return nChannelId;
 }
 
