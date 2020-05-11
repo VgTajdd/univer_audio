@@ -10,7 +10,7 @@ namespace univer::audio
 class USound
 {
 public:
-	explicit USound( const std::string _name,
+	explicit USound( const std::string& _name,
 					 const float _defaultVolumeDB,
 					 const float _minDistance,
 					 const float _maxDistance,

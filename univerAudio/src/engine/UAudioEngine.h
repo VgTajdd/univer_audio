@@ -3,43 +3,38 @@
 
 #include <string>
 
+namespace univer::audio { struct UVector3; }
+
 namespace univer::audio
 {
-struct Vector3
-{
-	float x;
-	float y;
-	float z;
-};
-
-struct USound
-{
-	std::string name;
-	float defaultVolumedB;
-	float minDistance;
-	float maxDistance;
-	bool is3d;
-	bool isLooping;
-	bool isStreaming;
-};
-
 class UAudioEngine
 {
 public:
 	void init();
-	void update();
+	void update( const float dt );
 	void shutdown();
 
-	void loadSound( const std::string& strSoundName, bool b3d = true, bool bLooping = false, bool bStream = false );
-	void unLoadSound( const std::string& strSoundName );
+	int registerSound( const std::string _name,
+					   const float _defaultVolumeDB,
+					   const float _minDistance,
+					   const float _maxDistance,
+					   const bool _is3d,
+					   const bool _isLooping,
+					   const bool _isStreaming,
+					   bool load = true );
 
-	int playSound( const std::string& strSoundName, const Vector3& vPos = Vector3{ 0, 0, 0 }, float fVolumedB = 0.0f );
+	void unregisterSound( int soundId );
 
-	void setChannel3dPosition( int nChannelId, const Vector3& vPosition );
+	void loadSound( const int soundId, bool b3d = true, bool bLooping = false, bool bStream = false );
+	void unLoadSound( const int soundId );
+
+	int playSound( const int soundId, const UVector3& vPos, float fVolumedB = 0.0f );
+
+	void setChannel3dPosition( int nChannelId, const UVector3& vPosition );
 	void setChannelVolume( int nChannelId, float fVolumedB );
 
-	void set3dListenerAndOrientation( const Vector3& vPosition, const Vector3& vLook, const Vector3& vUp );
-	void stopChannel( int nChannelId );
+	void set3dListenerAndOrientation( const UVector3& vPosition, const UVector3& vLook, const UVector3& vUp );
+	void stopChannel( int nChannelId, float fFadeTimeSeconds = 0.f );
 	void stopAllChannels();
 	bool isPlaying( int nChannelId ) const;
 

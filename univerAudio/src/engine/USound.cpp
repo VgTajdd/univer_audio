@@ -2,7 +2,7 @@
 
 using univer::audio::USound;
 
-USound::USound( const std::string _name,
+USound::USound( const std::string& _name,
 				const float _defaultVolumeDB,
 				const float _minDistance,
 				const float _maxDistance,
