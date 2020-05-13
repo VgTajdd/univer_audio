@@ -49,6 +49,17 @@ public:
 	void loadSound( const int soundId );
 	void unloadSound( const int soundId );
 
+	float dBToVolume( const float dB )
+	{
+		return powf( 10.0f, 0.05f * dB );
+	}
+
+	float volumeTodB( const float volume )
+	{
+		return 20.0f * log10f( volume );
+	}
+
+public:
 	::FMOD::System* system;
 	int nextChannelId;
 
@@ -102,7 +113,6 @@ struct UChannel
 	float getVolumedB() const;
 
 	//bool isOneShot() const;
-	float dBToVolume( const float db ) const;
 
 	//const int SILENCE_dB = 10;
 	//const int VIRTUALIZE_FADE_TIME = 10;
@@ -164,7 +174,7 @@ void UChannel::update( float fTimeDeltaSeconds )
 					FMOD_VECTOR velocity = { 0, 0, 0 };
 					checkErrors( mpChannel->set3DAttributes( &position, &velocity ) );
 				}
-				checkErrors( mpChannel->setVolume( dBToVolume( getVolumedB() ) ) );
+				checkErrors( mpChannel->setVolume( mImplementation.dBToVolume( getVolumedB() ) ) );
 				checkErrors( mpChannel->setPaused( false ) );
 			}
 			else
@@ -270,11 +280,6 @@ float UChannel::getVolumedB() const
 //{
 //	return false;
 //}
-
-float UChannel::dBToVolume( const float dB ) const
-{
-	return powf( 10.0f, 0.05f * dB );
-}
 
 /////////////////// UAEImplementation ///////////////////
 
@@ -536,12 +541,12 @@ bool UAudioEngine::isPlaying( int nChannelId ) const
 	return isPlaying;
 }
 
-float UAudioEngine::dBToVolume( float dB )
+float UAudioEngine::dBToVolume( const float dB )
 {
-	return powf( 10.0f, 0.05f * dB );
+	return implementationPtr->dBToVolume( dB );
 }
 
-float UAudioEngine::volumeTodB( float volume )
+float UAudioEngine::volumeTodB( const float volume )
 {
-	return 20.0f * log10f( volume );
+	return implementationPtr->volumeTodB( volume );
 }
