@@ -18,6 +18,8 @@ public:
 					 const bool _isLooping,
 					 const bool _isStreaming );
 
+	~USound();
+
 	std::string name;
 	float defaultVolumedB;
 	float minDistance;

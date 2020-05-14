@@ -18,3 +18,8 @@ USound::USound( const std::string& _name,
 	isStreaming( _isStreaming ),
 	mpSound( nullptr )
 { }
+
+USound::~USound()
+{
+	mpSound = nullptr;
+}

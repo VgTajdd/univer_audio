@@ -61,11 +61,11 @@ public:
 
 public:
 	::FMOD::System* system;
-	int nextChannelId;
 
 	std::map< int, std::unique_ptr< USound > > sounds;
 	std::map< int, std::unique_ptr< UChannel > > channels;
 
+	int nextChannelId;
 	int nextSoundId;
 };
 
@@ -74,16 +74,19 @@ public:
 struct UChannel
 {
 	UChannel( UAEImplementation& tImplementation,
-			  int nSoundId,
+			  const int soundId,
 			  const UVector3& vPosition,
-			  float fVolumedB ) :
+			  const float fVolumedB ) :
 		mImplementation( tImplementation ),
 		mpChannel( nullptr ),
-		mbStopRequsted( false ),
-		mSoundId( nSoundId ),
+		m_stopRequested( false ),
+		mSoundId( soundId ),
 		mvPosition( vPosition ),
 		mfSoundVolume( fVolumedB )
 	{};
+
+	~UChannel() { mpChannel = nullptr; }
+
 	enum class State
 	{
 		INITIALIZE,
@@ -96,6 +99,7 @@ struct UChannel
 		//VIRTUAL,
 		//DEVIRTUALIZE,
 	};
+
 	UAEImplementation& mImplementation;
 	::FMOD::Channel* mpChannel;
 	int mSoundId;
@@ -103,15 +107,19 @@ struct UChannel
 	float mfVolumedB = 0.0f;
 	float mfSoundVolume = 0.0f;
 	State meState = State::INITIALIZE;
-	bool mbStopRequsted;
+	bool m_stopRequested;
 	UAudioFader mStopFader;
 	//UAudioFader mVirtualizeFader;
+
 	void update( float fTimeDeltaSeconds );
 	void updateChannelParameters();
-	//bool shouldBeVirtual( bool bAllowOneShotVirtuals ) const;
 	bool isPlaying() const;
 	float getVolumedB() const;
+	void stop( const float fadeTimeSeconds = 0.f );
+	void set3DAttributes( const FMOD_VECTOR* pos, const FMOD_VECTOR* vel );
+	void setVolume( const float volume );
 
+	//bool shouldBeVirtual( bool bAllowOneShotVirtuals ) const;
 	//bool isOneShot() const;
 
 	//const int SILENCE_dB = 10;
@@ -127,7 +135,7 @@ void UChannel::update( float fTimeDeltaSeconds )
 		//case UChannel::State::DEVIRTUALIZE:
 		case UChannel::State::TOPLAY:
 		{
-			if ( mbStopRequsted )
+			if ( m_stopRequested )
 			{
 				meState = State::STOPPING;
 				return;
@@ -194,7 +202,7 @@ void UChannel::update( float fTimeDeltaSeconds )
 		case UChannel::State::PLAYING:
 			//mVirtualizeFader.update( fTimeDeltaSeconds );
 			updateChannelParameters();
-			if ( !isPlaying() || mbStopRequsted )
+			if ( !isPlaying() || m_stopRequested )
 			{
 				meState = State::STOPPING;
 				return;
@@ -240,7 +248,7 @@ void UChannel::update( float fTimeDeltaSeconds )
 		//	break;
 
 		//case UChannel::State::VIRTUAL:
-		//	if ( mbStopRequsted )
+		//	if ( m_stopRequested )
 		//	{
 		//		meState = State::STOPPING;
 		//	}
@@ -257,11 +265,6 @@ void UChannel::updateChannelParameters()
 
 }
 
-//bool UChannel::shouldBeVirtual( bool bAllowOneShotVirtuals ) const
-//{
-//
-//}
-
 bool UChannel::isPlaying() const
 {
 	bool isPlaying = false;
@@ -275,6 +278,34 @@ float UChannel::getVolumedB() const
 	mpChannel->getVolume( &volumeDb );
 	return volumeDb;
 }
+
+void UChannel::stop( const float fadeTimeSeconds )
+{
+	m_stopRequested = true;
+	if ( fadeTimeSeconds > 0.f )
+	{
+		mStopFader.startFade( 0/*SILENCE_dB*/, fadeTimeSeconds );
+	}
+	else
+	{
+		checkErrors( mpChannel->stop() ); // TO FIX.
+	}
+}
+
+void UChannel::set3DAttributes( const FMOD_VECTOR* position, const FMOD_VECTOR* velocity )
+{
+	checkErrors( mpChannel->set3DAttributes( position, velocity ) );
+}
+
+void UChannel::setVolume( const float volume )
+{
+	checkErrors( mpChannel->setVolume( volume ) );
+}
+
+//bool UChannel::shouldBeVirtual( bool bAllowOneShotVirtuals ) const
+//{
+//
+//}
 
 //bool UChannel::isOneShot() const
 //{
@@ -298,9 +329,8 @@ UAEImplementation::~UAEImplementation()
 	{
 		if ( channel->isPlaying() )
 		{
-			checkErrors( channel->mpChannel->stop() );
+			channel->stop();
 		}
-		channel->mpChannel = nullptr;
 	}
 	for ( const auto& [soundId, sound] : sounds )
 	{
@@ -308,7 +338,6 @@ UAEImplementation::~UAEImplementation()
 		{
 			unloadSound( soundId );
 		}
-		sound->mpSound = nullptr;
 	}
 	checkErrors( system->release() );
 }
@@ -411,10 +440,10 @@ int UAudioEngine::registerSound( const std::string _name,
 								 const bool _is3d,
 								 const bool _isLooping,
 								 const bool _isStreaming,
-								 bool load )
+								 const bool load )
 {
-	int nSoundId = implementationPtr->nextSoundId++;
-	implementationPtr->sounds[nSoundId] = std::make_unique< USound >( _name,
+	int soundId = implementationPtr->nextSoundId++;
+	implementationPtr->sounds[soundId] = std::make_unique< USound >( _name,
 																	  _defaultVolumeDB,
 																	  _minDistance,
 																	  _maxDistance,
@@ -424,13 +453,13 @@ int UAudioEngine::registerSound( const std::string _name,
 
 	if ( load )
 	{
-		loadSound( nSoundId );
+		loadSound( soundId );
 	}
 
-	return nSoundId;
+	return soundId;
 }
 
-void UAudioEngine::unregisterSound( int soundId )
+void UAudioEngine::unregisterSound( const int soundId )
 {
 	if ( implementationPtr->soundIsLoaded( soundId ) )
 	{
@@ -439,7 +468,7 @@ void UAudioEngine::unregisterSound( int soundId )
 	implementationPtr->sounds.erase( soundId );
 }
 
-void UAudioEngine::loadSound( const int soundId, bool b3d, bool bLooping, bool bStream )
+void UAudioEngine::loadSound( const int soundId, const bool b3d, const bool bLooping, const bool bStream )
 {
 	implementationPtr->loadSound( soundId );
 }
@@ -449,29 +478,29 @@ void UAudioEngine::unLoadSound( const int soundId )
 	implementationPtr->unloadSound( soundId );
 }
 
-int UAudioEngine::playSound( const int soundId, const UVector3& vPosition, float fVolumedB )
+int UAudioEngine::playSound( const int soundId, const UVector3& vPosition, const float fVolumedB )
 {
-	int nChannelId = implementationPtr->nextChannelId++;
+	int channelId = implementationPtr->nextChannelId++;
 	auto tSoundIt = implementationPtr->sounds.find( soundId );
 	if ( !implementationPtr->soundIsLoaded( soundId ) )
 	{
 		loadSound( soundId );
 		if ( !implementationPtr->soundIsLoaded( soundId ) )
 		{
-			return nChannelId;
+			return channelId;
 		}
 	}
-	implementationPtr->channels[nChannelId] = std::make_unique< UChannel >( *implementationPtr,
+	implementationPtr->channels[channelId] = std::make_unique< UChannel >( *implementationPtr,
 																			soundId,
 																			vPosition,
 																			fVolumedB );
-	implementationPtr->channels[nChannelId]->update( 0.f );
-	return nChannelId;
+	implementationPtr->channels[channelId]->update( 0.f );
+	return channelId;
 }
 
-void UAudioEngine::setChannel3dPosition( int nChannelId, const UVector3& vPosition )
+void UAudioEngine::setChannel3dPosition( const int channelId, const UVector3& vPosition )
 {
-	auto tFoundIt = implementationPtr->channels.find( nChannelId );
+	auto tFoundIt = implementationPtr->channels.find( channelId );
 	if ( tFoundIt == implementationPtr->channels.end() )
 	{
 		return;
@@ -479,18 +508,18 @@ void UAudioEngine::setChannel3dPosition( int nChannelId, const UVector3& vPositi
 
 	FMOD_VECTOR position = VectorToFmod( vPosition );
 	FMOD_VECTOR velocity = { 0, 0, 0 };
-	checkErrors( tFoundIt->second->mpChannel->set3DAttributes( &position, &velocity ) );
+	tFoundIt->second->set3DAttributes( &position, &velocity );
 }
 
-void UAudioEngine::setChannelVolume( int nChannelId, float fVolumedB )
+void UAudioEngine::setChannelVolume( const int channelId, const float fVolumedB )
 {
-	auto tFoundIt = implementationPtr->channels.find( nChannelId );
+	auto tFoundIt = implementationPtr->channels.find( channelId );
 	if ( tFoundIt == implementationPtr->channels.end() )
 	{
 		return;
 	}
 
-	checkErrors( tFoundIt->second->mpChannel->setVolume( dBToVolume( fVolumedB ) ) );
+	tFoundIt->second->setVolume( dBToVolume( fVolumedB ) );
 }
 
 void UAudioEngine::set3dListenerAndOrientation( const UVector3& vPosition, const UVector3& vLook, const UVector3& vUp )
@@ -502,43 +531,33 @@ void UAudioEngine::set3dListenerAndOrientation( const UVector3& vPosition, const
 	checkErrors( implementationPtr->system->set3DListenerAttributes( 0, &position, &speed, &look, &up ) );
 }
 
-void UAudioEngine::stopChannel( int nChannelId, float fFadeTimeSeconds )
+void UAudioEngine::stopChannel( const int channelId, const float fadeTimeSeconds )
 {
-	auto tFoundIt = implementationPtr->channels.find( nChannelId );
+	auto tFoundIt = implementationPtr->channels.find( channelId );
 	if ( tFoundIt == implementationPtr->channels.end() )
 	{
 		return;
 	}
-	if ( fFadeTimeSeconds <= 0.0f )
-	{
-		checkErrors( tFoundIt->second->mpChannel->stop() );
-	}
-	else
-	{
-		tFoundIt->second->mbStopRequsted = true;
-		tFoundIt->second->mStopFader.startFade( 0/*SILENCE_dB*/, fFadeTimeSeconds );
-	}
+	tFoundIt->second->stop( fadeTimeSeconds );
 }
 
 void UAudioEngine::stopAllChannels()
 {
-	for ( const auto& [nChannel, channel] : implementationPtr->channels )
+	for ( const auto& [channelId, channel] : implementationPtr->channels )
 	{
-		checkErrors( channel->mpChannel->stop() );
+		channel->stop();
 	}
 }
 
-bool UAudioEngine::isPlaying( int nChannelId ) const
+bool UAudioEngine::isPlaying( const int channelId ) const
 {
-	auto tFoundIt = implementationPtr->channels.find( nChannelId );
+	auto tFoundIt = implementationPtr->channels.find( channelId );
 	if ( tFoundIt == implementationPtr->channels.end() )
 	{
 		return false;
 	}
 
-	bool isPlaying = false;
-	checkErrors( tFoundIt->second->mpChannel->isPlaying( &isPlaying ) );
-	return isPlaying;
+	return tFoundIt->second->isPlaying();
 }
 
 float UAudioEngine::dBToVolume( const float dB )

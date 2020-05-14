@@ -21,25 +21,25 @@ public:
 					   const bool _is3d,
 					   const bool _isLooping,
 					   const bool _isStreaming,
-					   bool load = true );
+					   const bool load = true );
 
-	void unregisterSound( int soundId );
+	void unregisterSound( const int soundId );
 
-	void loadSound( const int soundId, bool b3d = true, bool bLooping = false, bool bStream = false );
+	void loadSound( const int soundId, const bool b3d = true, const bool bLooping = false, const bool bStream = false );
 	void unLoadSound( const int soundId );
 
-	int playSound( const int soundId, const UVector3& vPos, float fVolumedB = 0.0f );
+	int playSound( const int soundId, const UVector3& vPos, const float fVolumedB = 0.0f );
 
-	void setChannel3dPosition( int nChannelId, const UVector3& vPosition );
-	void setChannelVolume( int nChannelId, float fVolumedB );
+	void setChannel3dPosition( const int channelId, const UVector3& vPosition );
+	void setChannelVolume( const int channelId, float fVolumedB );
 
 	void set3dListenerAndOrientation( const UVector3& vPosition, const UVector3& vLook, const UVector3& vUp );
-	void stopChannel( int nChannelId, float fFadeTimeSeconds = 0.f );
+	void stopChannel( const int channelId, const float fadeTimeSeconds = 0.f );
 	void stopAllChannels();
-	bool isPlaying( int nChannelId ) const;
+	bool isPlaying( const int channelId ) const;
 
-	float dBToVolume( float dB );
-	float volumeTodB( float volume );
+	float dBToVolume( const float dB );
+	float volumeTodB( const float volume );
 };
 }
 
