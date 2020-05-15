@@ -83,7 +83,9 @@ struct UChannel
 		mSoundId( soundId ),
 		mvPosition( vPosition ),
 		mfSoundVolume( fVolumedB )
-	{};
+	{
+		mStopFader.setInitialVolume( mImplementation.dBToVolume( getVolumedB() ) );
+	};
 
 	~UChannel() { mpChannel = nullptr; }
 
@@ -262,7 +264,10 @@ void UChannel::update( float fTimeDeltaSeconds )
 
 void UChannel::updateChannelParameters()
 {
-
+	if ( !mStopFader.isFinished() && mStopFader.isStarted() )
+	{
+		mpChannel->setVolume( mStopFader.getVolume() );
+	}
 }
 
 bool UChannel::isPlaying() const
@@ -288,7 +293,7 @@ void UChannel::stop( const float fadeTimeSeconds )
 	}
 	else
 	{
-		checkErrors( mpChannel->stop() ); // TO FIX.
+		checkErrors( mpChannel->stop() );
 	}
 }
 
@@ -300,6 +305,7 @@ void UChannel::set3DAttributes( const FMOD_VECTOR* position, const FMOD_VECTOR* 
 void UChannel::setVolume( const float volume )
 {
 	checkErrors( mpChannel->setVolume( volume ) );
+	mStopFader.setInitialVolume( volume );
 }
 
 //bool UChannel::shouldBeVirtual( bool bAllowOneShotVirtuals ) const

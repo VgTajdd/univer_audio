@@ -21,6 +21,9 @@
     <ClCompile Include="src\engine\USound.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\engine\UAudioFader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\engine\UAudioEngine.h">

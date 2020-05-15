@@ -8,12 +8,22 @@ namespace univer::audio
 class UAudioFader
 {
 public:
-	explicit UAudioFader() {}
+	explicit UAudioFader();
+	~UAudioFader();
 public:
-	void update( const float dt ) {}
-	bool isFinished() const { return true; }
-	void startFade( const float volume, const float a ) {}
-	void startFade( const float volume, const float a, const float b ) {}
+	void update( const float dt );
+	bool isFinished() const { return m_isFinished; }
+	bool isStarted() const { return m_isStarted; }
+	void startFade( const float volume, const float fadeTime );
+	const float getVolume() const;
+	void setInitialVolume( const float initialVolume ) { m_initialVolume = initialVolume; }
+private:
+	bool m_isFinished;
+	bool m_isStarted;
+	float m_fadeTime;
+	float m_initialVolume;
+	float m_finalVolume;
+	float m_maxFadeTime;
 };
 }
 
