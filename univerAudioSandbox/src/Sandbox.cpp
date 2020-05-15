@@ -82,14 +82,26 @@ int main()
 		std::chrono::steady_clock::time_point lastTime;
 		lastTime = std::chrono::steady_clock::now();
 
-		while ( angle <= 360 )
+		while ( /*angle <= 360*/true )
 		{
 
 			std::chrono::milliseconds delta( 16 );
 			std::this_thread::sleep_for( delta );
 
-			audioEngine.setChannel3dPosition( channel, univer::audio::UVector3{ 5 * sin( TO_RADIANS * angle ), 0, 5 * cos( TO_RADIANS * angle ) } );
-			std::cout << angle++ << std::endl;
+			if ( angle < 360 )
+			{
+				audioEngine.setChannel3dPosition( channel, univer::audio::UVector3{ 5 * sin( TO_RADIANS * angle ), 0, 5 * cos( TO_RADIANS * angle ) } );
+				std::cout << angle++ << std::endl;
+				if ( angle == 360 )
+				{
+					audioEngine.stopChannel( channel, 1000 );
+				}
+			}
+
+			if ( !audioEngine.isPlaying( channel ) )
+			{
+				break;
+			}
 
 			std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
 			int dt = int( std::chrono::duration_cast<std::chrono::milliseconds>( now - lastTime ).count() );
@@ -99,8 +111,8 @@ int main()
 		}
 
 		//audioEngine.stopChannel( channel );
-		audioEngine.stopAllChannels();
-		std::cin.get();
+		//audioEngine.stopAllChannels();
+		//std::cin.get();
 		audioEngine.shutdown();
 	}
 
