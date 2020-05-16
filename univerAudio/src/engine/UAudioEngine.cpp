@@ -46,7 +46,7 @@ public:
 	void update( const float fTimeDeltaSeconds );
 
 	bool soundIsLoaded( const int soundId );
-	void loadSound( const int soundId );
+	void loadSound( const int soundId, const void* data = nullptr );
 	void unloadSound( const int soundId );
 
 	float dBToVolume( const float dB )
@@ -164,7 +164,7 @@ void UChannel::update( float fTimeDeltaSeconds )
 			auto tSoundIt = mImplementation.sounds.find( mSoundId );
 			if ( tSoundIt != mImplementation.sounds.end() )
 			{
-				checkErrors( mImplementation.system->playSound( tSoundIt->second->mpSound,
+				checkErrors( mImplementation.system->playSound( tSoundIt->second->m_fmodSound,
 																nullptr,
 																true,
 																&mpChannel ) );
@@ -177,7 +177,7 @@ void UChannel::update( float fTimeDeltaSeconds )
 				meState = State::PLAYING;
 
 				FMOD_MODE currMode;
-				checkErrors( tSoundIt->second->mpSound->getMode( &currMode ) );
+				checkErrors( tSoundIt->second->m_fmodSound->getMode( &currMode ) );
 				if ( currMode & FMOD_3D )
 				{
 					FMOD_VECTOR position = VectorToFmod( mvPosition );
@@ -371,7 +371,7 @@ bool UAEImplementation::soundIsLoaded( const int soundId )
 	auto tFoundIt = sounds.find( soundId );
 	if ( tFoundIt != sounds.end() )
 	{
-		if ( tFoundIt->second->mpSound != nullptr )
+		if ( tFoundIt->second->m_fmodSound != nullptr )
 		{
 			return true;
 		}
@@ -379,7 +379,7 @@ bool UAEImplementation::soundIsLoaded( const int soundId )
 	return false;
 }
 
-void UAEImplementation::loadSound( const int soundId )
+void UAEImplementation::loadSound( const int soundId, const void* data )
 {
 	if ( soundIsLoaded( soundId ) )
 	{
@@ -391,17 +391,27 @@ void UAEImplementation::loadSound( const int soundId )
 		return;
 	}
 
+	const auto& uSound = tFoundIt->second;
+
 	FMOD_MODE eMode = /*FMOD_NONBLOCKING*/FMOD_DEFAULT;
-	eMode |= tFoundIt->second->is3d ? ( FMOD_3D/* | FMOD_3D_INVERSETAPEREDROLLOFF*/ ) : FMOD_2D;
-	eMode |= tFoundIt->second->isLooping ? FMOD_LOOP_NORMAL : FMOD_LOOP_OFF;
-	eMode |= tFoundIt->second->isStreaming ? FMOD_CREATESTREAM : FMOD_CREATECOMPRESSEDSAMPLE;
+	eMode |= uSound->is3d ? ( FMOD_3D/* | FMOD_3D_INVERSETAPEREDROLLOFF*/ ) : FMOD_2D;
+	eMode |= uSound->isLooping ? FMOD_LOOP_NORMAL : FMOD_LOOP_OFF;
+	eMode |= uSound->isStreaming ? FMOD_CREATESTREAM : FMOD_CREATECOMPRESSEDSAMPLE;
 
 	::FMOD::Sound* sound = nullptr;
-	checkErrors( system->createSound( tFoundIt->second->name.c_str(), eMode, nullptr, &sound ) );
+	if ( uSound->useBinaryData )
+	{
+		checkErrors( system->createSound( (const char*) data, eMode, nullptr, &sound ) );
+	}
+	else
+	{
+		checkErrors( system->createSound( uSound->name.c_str(), eMode, nullptr, &sound ) );
+	}
+
 	if ( sound != nullptr )
 	{
-		checkErrors( sound->set3DMinMaxDistance( tFoundIt->second->minDistance, tFoundIt->second->maxDistance ) );
-		tFoundIt->second->mpSound = sound;
+		checkErrors( sound->set3DMinMaxDistance( uSound->minDistance, uSound->maxDistance ) );
+		uSound->m_fmodSound = sound;
 	}
 }
 
@@ -412,11 +422,12 @@ void UAEImplementation::unloadSound( const int soundId )
 	{
 		return;
 	}
-	if ( tFoundIt->second->mpSound != nullptr )
+	const auto& uSound = tFoundIt->second;
+	if ( uSound->m_fmodSound != nullptr )
 	{
-		checkErrors( tFoundIt->second->mpSound->release() );
+		checkErrors( uSound->m_fmodSound->release() );
 	}
-	tFoundIt->second->mpSound = nullptr;
+	uSound->m_fmodSound = nullptr;
 }
 
 UAEImplementation* implementationPtr = nullptr;
@@ -439,25 +450,27 @@ void UAudioEngine::shutdown()
 	delete implementationPtr;
 }
 
-int UAudioEngine::registerSound( const std::string _name,
-								 const float _defaultVolumeDB,
-								 const float _minDistance,
-								 const float _maxDistance,
-								 const bool _is3d,
-								 const bool _isLooping,
-								 const bool _isStreaming,
-								 const bool load )
+int UAudioEngine::registerSound( const std::string name,
+								 const float defaultVolumeDB,
+								 const float minDistance,
+								 const float maxDistance,
+								 const bool is3d,
+								 const bool isLooping,
+								 const bool isStreaming,
+								 const bool load,
+								 const bool useBinary )
 {
 	int soundId = implementationPtr->nextSoundId++;
-	implementationPtr->sounds[soundId] = std::make_unique< USound >( _name,
-																	  _defaultVolumeDB,
-																	  _minDistance,
-																	  _maxDistance,
-																	  _is3d,
-																	  _isLooping,
-																	  _isStreaming );
+	implementationPtr->sounds[soundId] = std::make_unique< USound >( name,
+																	 defaultVolumeDB,
+																	 minDistance,
+																	 maxDistance,
+																	 is3d,
+																	 isLooping,
+																	 isStreaming,
+																	 useBinary );
 
-	if ( load )
+	if ( load && !useBinary )
 	{
 		loadSound( soundId );
 	}
@@ -474,9 +487,9 @@ void UAudioEngine::unregisterSound( const int soundId )
 	implementationPtr->sounds.erase( soundId );
 }
 
-void UAudioEngine::loadSound( const int soundId, const bool b3d, const bool bLooping, const bool bStream )
+void UAudioEngine::loadSound( const int soundId, const bool b3d, const bool bLooping, const bool bStream, const void* data )
 {
-	implementationPtr->loadSound( soundId );
+	implementationPtr->loadSound( soundId, data );
 }
 
 void UAudioEngine::unLoadSound( const int soundId )

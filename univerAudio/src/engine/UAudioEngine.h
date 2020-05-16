@@ -14,18 +14,24 @@ public:
 	void update( const float dt );
 	void shutdown();
 
-	int registerSound( const std::string _name,
-					   const float _defaultVolumeDB,
-					   const float _minDistance,
-					   const float _maxDistance,
-					   const bool _is3d,
-					   const bool _isLooping,
-					   const bool _isStreaming,
-					   const bool load = true );
+	int registerSound( const std::string name,
+					   const float defaultVolumeDB,
+					   const float minDistance,
+					   const float maxDistance,
+					   const bool is3d,
+					   const bool isLooping,
+					   const bool isStreaming,
+					   const bool load = true,
+					   const bool useBinary = false );
 
 	void unregisterSound( const int soundId );
 
-	void loadSound( const int soundId, const bool b3d = true, const bool bLooping = false, const bool bStream = false );
+	void loadSound( const int soundId,
+					const bool b3d = true,
+					const bool bLooping = false,
+					const bool bStream = false,
+					const void* data = nullptr );
+
 	void unLoadSound( const int soundId );
 
 	int playSound( const int soundId, const UVector3& vPos, const float fVolumedB = 0.0f );

@@ -16,7 +16,8 @@ public:
 					 const float _maxDistance,
 					 const bool _is3d,
 					 const bool _isLooping,
-					 const bool _isStreaming );
+					 const bool _isStreaming,
+					 const bool _useBinaryData );
 
 	~USound();
 
@@ -27,8 +28,9 @@ public:
 	bool is3d;
 	bool isLooping;
 	bool isStreaming;
+	bool useBinaryData;
 
-	::FMOD::Sound* mpSound = nullptr;
+	::FMOD::Sound* m_fmodSound;
 };
 }
 
