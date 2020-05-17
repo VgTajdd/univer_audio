@@ -15,27 +15,24 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\engine\UAudioEngine.cpp">
+    <ClCompile Include="src\private\UAudioEngine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\engine\USound.cpp">
+    <ClCompile Include="src\private\UAudioFader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\engine\UAudioFader.cpp">
+    <ClCompile Include="src\private\USound.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\engine\UAudioEngine.h">
+    <ClInclude Include="src\private\UAudioFader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\engine\USound.h">
+    <ClInclude Include="src\private\USound.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\engine\UVector3.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\engine\UAudioFader.h">
+    <ClInclude Include="src\UAudioEngine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

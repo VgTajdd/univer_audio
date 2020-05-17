@@ -1,6 +1,5 @@
-#include "UAudioEngine.h"
+#include "../UAudioEngine.h"
 #include "USound.h"
-#include "UVector3.h"
 #include "UAudioFader.h"
 
 #include "fmod.hpp"
@@ -14,14 +13,6 @@ using univer::audio::USound;
 
 namespace univer::audio
 {
-FMOD_VECTOR VectorToFmod( const UVector3& vPosition )
-{
-	FMOD_VECTOR fVec;
-	fVec.x = vPosition.x;
-	fVec.y = vPosition.y;
-	fVec.z = vPosition.z;
-	return fVec;
-}
 
 int checkErrors( FMOD_RESULT result )
 {
@@ -75,19 +66,19 @@ struct UChannel
 {
 	UChannel( UAEImplementation& tImplementation,
 			  const int soundId,
-			  const UVector3& vPosition,
+			  const float vPosition[3],
 			  const float fVolumedB ) :
 		mImplementation( tImplementation ),
-		mpChannel( nullptr ),
+		m_fmodChannel( nullptr ),
 		m_stopRequested( false ),
 		mSoundId( soundId ),
-		mvPosition( vPosition ),
 		mfSoundVolume( fVolumedB )
 	{
+		std::copy( vPosition, vPosition + 3, mvPosition );
 		mStopFader.setInitialVolume( mImplementation.dBToVolume( getVolumedB() ) );
 	};
 
-	~UChannel() { mpChannel = nullptr; }
+	~UChannel() { m_fmodChannel = nullptr; }
 
 	enum class State
 	{
@@ -103,9 +94,9 @@ struct UChannel
 	};
 
 	UAEImplementation& mImplementation;
-	::FMOD::Channel* mpChannel;
+	::FMOD::Channel* m_fmodChannel;
 	int mSoundId;
-	UVector3 mvPosition;
+	float mvPosition[3];
 	float mfVolumedB = 0.0f;
 	float mfSoundVolume = 0.0f;
 	State meState = State::INITIALIZE;
@@ -160,16 +151,16 @@ void UChannel::update( float fTimeDeltaSeconds )
 				meState = State::LOADING;
 				return;
 			}
-			mpChannel = nullptr;
+			m_fmodChannel = nullptr;
 			auto tSoundIt = mImplementation.sounds.find( mSoundId );
 			if ( tSoundIt != mImplementation.sounds.end() )
 			{
 				checkErrors( mImplementation.system->playSound( tSoundIt->second->m_fmodSound,
 																nullptr,
 																true,
-																&mpChannel ) );
+																&m_fmodChannel ) );
 			}
-			if ( mpChannel != nullptr )
+			if ( m_fmodChannel != nullptr )
 			{
 				//if ( meState == State::DEVIRTUALIZE )
 				//	mVirtualizeFader.startFade( SILENCE_dB, 0.0f,
@@ -180,12 +171,12 @@ void UChannel::update( float fTimeDeltaSeconds )
 				checkErrors( tSoundIt->second->m_fmodSound->getMode( &currMode ) );
 				if ( currMode & FMOD_3D )
 				{
-					FMOD_VECTOR position = VectorToFmod( mvPosition );
+					FMOD_VECTOR position = { mvPosition[0], mvPosition[1], mvPosition[2] };
 					FMOD_VECTOR velocity = { 0, 0, 0 };
-					checkErrors( mpChannel->set3DAttributes( &position, &velocity ) );
+					checkErrors( m_fmodChannel->set3DAttributes( &position, &velocity ) );
 				}
-				checkErrors( mpChannel->setVolume( mImplementation.dBToVolume( getVolumedB() ) ) );
-				checkErrors( mpChannel->setPaused( false ) );
+				checkErrors( m_fmodChannel->setVolume( mImplementation.dBToVolume( getVolumedB() ) ) );
+				checkErrors( m_fmodChannel->setPaused( false ) );
 			}
 			else
 			{
@@ -221,7 +212,7 @@ void UChannel::update( float fTimeDeltaSeconds )
 			updateChannelParameters();
 			if ( mStopFader.isFinished() )
 			{
-				mpChannel->stop();
+				m_fmodChannel->stop();
 			}
 			if ( !isPlaying() )
 			{
@@ -244,7 +235,7 @@ void UChannel::update( float fTimeDeltaSeconds )
 		//	}
 		//	if ( mVirtualizeFader.isFinished() )
 		//	{
-		//		mpChannel->stop();
+		//		m_fmodChannel->stop();
 		//		meState = State::VIRTUAL;
 		//	}
 		//	break;
@@ -266,21 +257,21 @@ void UChannel::updateChannelParameters()
 {
 	if ( !mStopFader.isFinished() && mStopFader.isStarted() )
 	{
-		mpChannel->setVolume( mStopFader.getVolume() );
+		m_fmodChannel->setVolume( mStopFader.getVolume() );
 	}
 }
 
 bool UChannel::isPlaying() const
 {
 	bool isPlaying = false;
-	mpChannel->isPlaying( &isPlaying );
+	m_fmodChannel->isPlaying( &isPlaying );
 	return isPlaying;
 }
 
 float UChannel::getVolumedB() const
 {
 	float volumeDb = 0.f;
-	mpChannel->getVolume( &volumeDb );
+	m_fmodChannel->getVolume( &volumeDb );
 	return volumeDb;
 }
 
@@ -293,18 +284,18 @@ void UChannel::stop( const float fadeTimeSeconds )
 	}
 	else
 	{
-		checkErrors( mpChannel->stop() );
+		checkErrors( m_fmodChannel->stop() );
 	}
 }
 
 void UChannel::set3DAttributes( const FMOD_VECTOR* position, const FMOD_VECTOR* velocity )
 {
-	checkErrors( mpChannel->set3DAttributes( position, velocity ) );
+	checkErrors( m_fmodChannel->set3DAttributes( position, velocity ) );
 }
 
 void UChannel::setVolume( const float volume )
 {
-	checkErrors( mpChannel->setVolume( volume ) );
+	checkErrors( m_fmodChannel->setVolume( volume ) );
 	mStopFader.setInitialVolume( volume );
 }
 
@@ -497,7 +488,7 @@ void UAudioEngine::unLoadSound( const int soundId )
 	implementationPtr->unloadSound( soundId );
 }
 
-int UAudioEngine::playSound( const int soundId, const UVector3& vPosition, const float fVolumedB )
+int UAudioEngine::playSound( const int soundId, const float vPosition[3], const float fVolumedB )
 {
 	int channelId = implementationPtr->nextChannelId++;
 	auto tSoundIt = implementationPtr->sounds.find( soundId );
@@ -517,7 +508,7 @@ int UAudioEngine::playSound( const int soundId, const UVector3& vPosition, const
 	return channelId;
 }
 
-void UAudioEngine::setChannel3dPosition( const int channelId, const UVector3& vPosition )
+void UAudioEngine::setChannel3dPosition( const int channelId, const float vPosition[3] )
 {
 	auto tFoundIt = implementationPtr->channels.find( channelId );
 	if ( tFoundIt == implementationPtr->channels.end() )
@@ -525,7 +516,7 @@ void UAudioEngine::setChannel3dPosition( const int channelId, const UVector3& vP
 		return;
 	}
 
-	FMOD_VECTOR position = VectorToFmod( vPosition );
+	FMOD_VECTOR position = { vPosition[0], vPosition[1], vPosition[2] };
 	FMOD_VECTOR velocity = { 0, 0, 0 };
 	tFoundIt->second->set3DAttributes( &position, &velocity );
 }
@@ -541,12 +532,12 @@ void UAudioEngine::setChannelVolume( const int channelId, const float fVolumedB 
 	tFoundIt->second->setVolume( dBToVolume( fVolumedB ) );
 }
 
-void UAudioEngine::set3dListenerAndOrientation( const UVector3& vPosition, const UVector3& vLook, const UVector3& vUp )
+void UAudioEngine::set3dListenerAndOrientation( const float vPosition[3], const float vLook[3], const float vUp[3] )
 {
-	FMOD_VECTOR position = VectorToFmod( vPosition );
-	FMOD_VECTOR speed = VectorToFmod( { 0, 0, 0 } );
-	FMOD_VECTOR look = VectorToFmod( vLook );
-	FMOD_VECTOR up = VectorToFmod( vUp );
+	FMOD_VECTOR position = { vPosition[0], vPosition[1], vPosition[2] };
+	FMOD_VECTOR speed = { 0, 0, 0 };
+	FMOD_VECTOR look = { vLook[0], vLook[1], vLook[2] };
+	FMOD_VECTOR up = { vUp[0], vUp[1], vUp[2] };
 	checkErrors( implementationPtr->system->set3DListenerAttributes( 0, &position, &speed, &look, &up ) );
 }
 

@@ -3,8 +3,6 @@
 
 #include <string>
 
-namespace univer::audio { struct UVector3; }
-
 namespace univer::audio
 {
 class UAudioEngine
@@ -34,12 +32,12 @@ public:
 
 	void unLoadSound( const int soundId );
 
-	int playSound( const int soundId, const UVector3& vPos, const float fVolumedB = 0.0f );
+	int playSound( const int soundId, const float vPos[3], const float fVolumedB = 0.0f );
 
-	void setChannel3dPosition( const int channelId, const UVector3& vPosition );
+	void setChannel3dPosition( const int channelId, const float vPosition[3] );
 	void setChannelVolume( const int channelId, float fVolumedB );
 
-	void set3dListenerAndOrientation( const UVector3& vPosition, const UVector3& vLook, const UVector3& vUp );
+	void set3dListenerAndOrientation( const float vPosition[3], const float vLook[3], const float vUp[3] );
 	void stopChannel( const int channelId, const float fadeTimeSeconds = 0.f );
 	void stopAllChannels();
 	bool isPlaying( const int channelId ) const;

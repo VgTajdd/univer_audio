@@ -182,15 +182,14 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="src\engine\UAudioEngine.h" />
-    <ClInclude Include="src\engine\UAudioFader.h" />
-    <ClInclude Include="src\engine\USound.h" />
-    <ClInclude Include="src\engine\UVector3.h" />
+    <ClInclude Include="src\UAudioEngine.h" />
+    <ClInclude Include="src\private\UAudioFader.h" />
+    <ClInclude Include="src\private\USound.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\engine\UAudioEngine.cpp" />
-    <ClCompile Include="src\engine\UAudioFader.cpp" />
-    <ClCompile Include="src\engine\USound.cpp" />
+    <ClCompile Include="src\private\UAudioEngine.cpp" />
+    <ClCompile Include="src\private\UAudioFader.cpp" />
+    <ClCompile Include="src\private\USound.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
