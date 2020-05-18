@@ -68,14 +68,15 @@ struct UChannel
 			  const int soundId,
 			  const float vPosition[3],
 			  const float fVolumedB ) :
-		mImplementation( tImplementation ),
+		m_implementation( tImplementation ),
 		m_fmodChannel( nullptr ),
 		m_stopRequested( false ),
-		mSoundId( soundId ),
-		mfSoundVolume( fVolumedB )
+		m_soundId( soundId ),
+		m_soundVolume( fVolumedB ),
+		m_state( State::INITIALIZE )
 	{
-		std::copy( vPosition, vPosition + 3, mvPosition );
-		mStopFader.setInitialVolume( mImplementation.dBToVolume( getVolumedB() ) );
+		std::copy( vPosition, vPosition + 3, m_position );
+		m_stopFader.setInitialVolume( m_implementation.dBToVolume( getVolumedB() ) );
 	};
 
 	~UChannel() { m_fmodChannel = nullptr; }
@@ -93,15 +94,15 @@ struct UChannel
 		//DEVIRTUALIZE,
 	};
 
-	UAEImplementation& mImplementation;
+	UAEImplementation& m_implementation;
 	::FMOD::Channel* m_fmodChannel;
-	int mSoundId;
-	float mvPosition[3];
-	float mfVolumedB = 0.0f;
-	float mfSoundVolume = 0.0f;
-	State meState = State::INITIALIZE;
+	int m_soundId;
+	float m_position[3];
+	float m_volumedB ;
+	float m_soundVolume;
+	State m_state = State::INITIALIZE;
 	bool m_stopRequested;
-	UAudioFader mStopFader;
+	UAudioFader m_stopFader;
 	//UAudioFader mVirtualizeFader;
 
 	void update( float fTimeDeltaSeconds );
@@ -121,7 +122,7 @@ struct UChannel
 
 void UChannel::update( float fTimeDeltaSeconds )
 {
-	switch ( meState )
+	switch ( m_state )
 	{
 		case UChannel::State::INITIALIZE:
 			[[fallthrough]];
@@ -130,65 +131,65 @@ void UChannel::update( float fTimeDeltaSeconds )
 		{
 			if ( m_stopRequested )
 			{
-				meState = State::STOPPING;
+				m_state = State::STOPPING;
 				return;
 			}
 			//if ( shouldBeVirtual( true ) )
 			//{
 			//	if ( isOneShot() )
 			//	{
-			//		meState = State::STOPPING;
+			//		m_state = State::STOPPING;
 			//	}
 			//	else
 			//	{
-			//		meState = State::VIRTUAL;
+			//		m_state = State::VIRTUAL;
 			//	}
 			//	return;
 			//}
-			if ( !mImplementation.soundIsLoaded( mSoundId ) )
+			if ( !m_implementation.soundIsLoaded( m_soundId ) )
 			{
-				mImplementation.loadSound( mSoundId );
-				meState = State::LOADING;
+				m_implementation.loadSound( m_soundId );
+				m_state = State::LOADING;
 				return;
 			}
 			m_fmodChannel = nullptr;
-			auto tSoundIt = mImplementation.sounds.find( mSoundId );
-			if ( tSoundIt != mImplementation.sounds.end() )
+			auto tSoundIt = m_implementation.sounds.find( m_soundId );
+			if ( tSoundIt != m_implementation.sounds.end() )
 			{
-				checkErrors( mImplementation.system->playSound( tSoundIt->second->m_fmodSound,
+				checkErrors( m_implementation.system->playSound( tSoundIt->second->m_fmodSound,
 																nullptr,
 																true,
 																&m_fmodChannel ) );
 			}
 			if ( m_fmodChannel != nullptr )
 			{
-				//if ( meState == State::DEVIRTUALIZE )
+				//if ( m_state == State::DEVIRTUALIZE )
 				//	mVirtualizeFader.startFade( SILENCE_dB, 0.0f,
 				//								VIRTUALIZE_FADE_TIME );
-				meState = State::PLAYING;
+				m_state = State::PLAYING;
 
 				FMOD_MODE currMode;
 				checkErrors( tSoundIt->second->m_fmodSound->getMode( &currMode ) );
 				if ( currMode & FMOD_3D )
 				{
-					FMOD_VECTOR position = { mvPosition[0], mvPosition[1], mvPosition[2] };
+					FMOD_VECTOR position = { m_position[0], m_position[1], m_position[2] };
 					FMOD_VECTOR velocity = { 0, 0, 0 };
 					checkErrors( m_fmodChannel->set3DAttributes( &position, &velocity ) );
 				}
-				checkErrors( m_fmodChannel->setVolume( mImplementation.dBToVolume( getVolumedB() ) ) );
+				checkErrors( m_fmodChannel->setVolume( m_implementation.dBToVolume( getVolumedB() ) ) );
 				checkErrors( m_fmodChannel->setPaused( false ) );
 			}
 			else
 			{
-				meState = State::STOPPING;
+				m_state = State::STOPPING;
 			}
 		}
 		break;
 
 		case UChannel::State::LOADING:
-			if ( mImplementation.soundIsLoaded( mSoundId ) )
+			if ( m_implementation.soundIsLoaded( m_soundId ) )
 			{
-				meState = State::TOPLAY;
+				m_state = State::TOPLAY;
 			}
 			break;
 
@@ -197,26 +198,26 @@ void UChannel::update( float fTimeDeltaSeconds )
 			updateChannelParameters();
 			if ( !isPlaying() || m_stopRequested )
 			{
-				meState = State::STOPPING;
+				m_state = State::STOPPING;
 				return;
 			}
 			//if ( shouldBeVirtual( false ) )
 			//{
 			//	mVirtualizeFader.startFade( SILENCE_dB, VIRTUALIZE_FADE_TIME );
-			//	meState = State::VIRTUALIZING;
+			//	m_state = State::VIRTUALIZING;
 			//}
 			break;
 
 		case UChannel::State::STOPPING:
-			mStopFader.update( fTimeDeltaSeconds );
+			m_stopFader.update( fTimeDeltaSeconds );
 			updateChannelParameters();
-			if ( mStopFader.isFinished() )
+			if ( m_stopFader.isFinished() )
 			{
 				m_fmodChannel->stop();
 			}
 			if ( !isPlaying() )
 			{
-				meState = State::STOPPED;
+				m_state = State::STOPPED;
 				return;
 			}
 			break;
@@ -230,24 +231,24 @@ void UChannel::update( float fTimeDeltaSeconds )
 		//	if ( !shouldBeVirtual( false ) )
 		//	{
 		//		mVirtualizeFader.startFade( 0.0f, VIRTUALIZE_FADE_TIME );
-		//		meState = State::PLAYING;
+		//		m_state = State::PLAYING;
 		//		break;
 		//	}
 		//	if ( mVirtualizeFader.isFinished() )
 		//	{
 		//		m_fmodChannel->stop();
-		//		meState = State::VIRTUAL;
+		//		m_state = State::VIRTUAL;
 		//	}
 		//	break;
 
 		//case UChannel::State::VIRTUAL:
 		//	if ( m_stopRequested )
 		//	{
-		//		meState = State::STOPPING;
+		//		m_state = State::STOPPING;
 		//	}
 		//	else if ( !shouldBeVirtual( false ) )
 		//	{
-		//		meState = State::DEVIRTUALIZE;
+		//		m_state = State::DEVIRTUALIZE;
 		//	}
 		//	break;
 	}
@@ -255,9 +256,9 @@ void UChannel::update( float fTimeDeltaSeconds )
 
 void UChannel::updateChannelParameters()
 {
-	if ( !mStopFader.isFinished() && mStopFader.isStarted() )
+	if ( !m_stopFader.isFinished() && m_stopFader.isStarted() )
 	{
-		m_fmodChannel->setVolume( mStopFader.getVolume() );
+		m_fmodChannel->setVolume( m_stopFader.getVolume() );
 	}
 }
 
@@ -280,7 +281,7 @@ void UChannel::stop( const float fadeTimeSeconds )
 	m_stopRequested = true;
 	if ( fadeTimeSeconds > 0.f )
 	{
-		mStopFader.startFade( 0/*SILENCE_dB*/, fadeTimeSeconds );
+		m_stopFader.startFade( 0/*SILENCE_dB*/, fadeTimeSeconds );
 	}
 	else
 	{
@@ -296,7 +297,7 @@ void UChannel::set3DAttributes( const FMOD_VECTOR* position, const FMOD_VECTOR* 
 void UChannel::setVolume( const float volume )
 {
 	checkErrors( m_fmodChannel->setVolume( volume ) );
-	mStopFader.setInitialVolume( volume );
+	m_stopFader.setInitialVolume( volume );
 }
 
 //bool UChannel::shouldBeVirtual( bool bAllowOneShotVirtuals ) const
@@ -345,7 +346,7 @@ void UAEImplementation::update( const float dt )
 	for ( auto it = channels.begin(), itEnd = channels.end(); it != itEnd; ++it )
 	{
 		it->second->update( dt );
-		if ( it->second->meState == UChannel::State::STOPPED )
+		if ( it->second->m_state == UChannel::State::STOPPED )
 		{
 			pStoppedChannels.push_back( it );
 		}
