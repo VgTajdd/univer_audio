@@ -88,10 +88,7 @@ struct UChannel
 		LOADING,
 		PLAYING,
 		STOPPING,
-		STOPPED,
-		//VIRTUALIZING,
-		//VIRTUAL,
-		//DEVIRTUALIZE,
+		STOPPED
 	};
 
 	UAEImplementation& m_implementation;
@@ -103,7 +100,6 @@ struct UChannel
 	State m_state = State::INITIALIZE;
 	bool m_stopRequested;
 	UAudioFader m_stopFader;
-	//UAudioFader mVirtualizeFader;
 
 	void update( float fTimeDeltaSeconds );
 	void updateChannelParameters();
@@ -112,12 +108,6 @@ struct UChannel
 	void stop( const float fadeTimeSeconds = 0.f );
 	void set3DAttributes( const FMOD_VECTOR* pos, const FMOD_VECTOR* vel );
 	void setVolume( const float volume );
-
-	//bool shouldBeVirtual( bool bAllowOneShotVirtuals ) const;
-	//bool isOneShot() const;
-
-	//const int SILENCE_dB = 10;
-	//const int VIRTUALIZE_FADE_TIME = 10;
 };
 
 void UChannel::update( float fTimeDeltaSeconds )
@@ -126,7 +116,6 @@ void UChannel::update( float fTimeDeltaSeconds )
 	{
 		case UChannel::State::INITIALIZE:
 			[[fallthrough]];
-		//case UChannel::State::DEVIRTUALIZE:
 		case UChannel::State::TOPLAY:
 		{
 			if ( m_stopRequested )
@@ -134,18 +123,6 @@ void UChannel::update( float fTimeDeltaSeconds )
 				m_state = State::STOPPING;
 				return;
 			}
-			//if ( shouldBeVirtual( true ) )
-			//{
-			//	if ( isOneShot() )
-			//	{
-			//		m_state = State::STOPPING;
-			//	}
-			//	else
-			//	{
-			//		m_state = State::VIRTUAL;
-			//	}
-			//	return;
-			//}
 			if ( !m_implementation.soundIsLoaded( m_soundId ) )
 			{
 				m_implementation.loadSound( m_soundId );
@@ -163,9 +140,6 @@ void UChannel::update( float fTimeDeltaSeconds )
 			}
 			if ( m_fmodChannel != nullptr )
 			{
-				//if ( m_state == State::DEVIRTUALIZE )
-				//	mVirtualizeFader.startFade( SILENCE_dB, 0.0f,
-				//								VIRTUALIZE_FADE_TIME );
 				m_state = State::PLAYING;
 
 				FMOD_MODE currMode;
@@ -194,18 +168,12 @@ void UChannel::update( float fTimeDeltaSeconds )
 			break;
 
 		case UChannel::State::PLAYING:
-			//mVirtualizeFader.update( fTimeDeltaSeconds );
 			updateChannelParameters();
 			if ( !isPlaying() || m_stopRequested )
 			{
 				m_state = State::STOPPING;
 				return;
 			}
-			//if ( shouldBeVirtual( false ) )
-			//{
-			//	mVirtualizeFader.startFade( SILENCE_dB, VIRTUALIZE_FADE_TIME );
-			//	m_state = State::VIRTUALIZING;
-			//}
 			break;
 
 		case UChannel::State::STOPPING:
@@ -224,33 +192,6 @@ void UChannel::update( float fTimeDeltaSeconds )
 
 		case UChannel::State::STOPPED:
 			break;
-
-		//case UChannel::State::VIRTUALIZING:
-		//	mVirtualizeFader.update( fTimeDeltaSeconds );
-		//	updateChannelParameters();
-		//	if ( !shouldBeVirtual( false ) )
-		//	{
-		//		mVirtualizeFader.startFade( 0.0f, VIRTUALIZE_FADE_TIME );
-		//		m_state = State::PLAYING;
-		//		break;
-		//	}
-		//	if ( mVirtualizeFader.isFinished() )
-		//	{
-		//		m_fmodChannel->stop();
-		//		m_state = State::VIRTUAL;
-		//	}
-		//	break;
-
-		//case UChannel::State::VIRTUAL:
-		//	if ( m_stopRequested )
-		//	{
-		//		m_state = State::STOPPING;
-		//	}
-		//	else if ( !shouldBeVirtual( false ) )
-		//	{
-		//		m_state = State::DEVIRTUALIZE;
-		//	}
-		//	break;
 	}
 }
 
@@ -281,7 +222,7 @@ void UChannel::stop( const float fadeTimeSeconds )
 	m_stopRequested = true;
 	if ( fadeTimeSeconds > 0.f )
 	{
-		m_stopFader.startFade( 0/*SILENCE_dB*/, fadeTimeSeconds );
+		m_stopFader.startFade( 0, fadeTimeSeconds );
 	}
 	else
 	{
@@ -299,16 +240,6 @@ void UChannel::setVolume( const float volume )
 	checkErrors( m_fmodChannel->setVolume( volume ) );
 	m_stopFader.setInitialVolume( volume );
 }
-
-//bool UChannel::shouldBeVirtual( bool bAllowOneShotVirtuals ) const
-//{
-//
-//}
-
-//bool UChannel::isOneShot() const
-//{
-//	return false;
-//}
 
 /////////////////// UAEImplementation ///////////////////
 
