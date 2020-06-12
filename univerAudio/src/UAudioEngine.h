@@ -28,7 +28,8 @@ public:
 					const bool b3d = true,
 					const bool bLooping = false,
 					const bool bStream = false,
-					const void* data = nullptr );
+					const void* data = nullptr,
+					const size_t dataSize = 0 );
 
 	void unLoadSound( const int soundId );
 

@@ -37,7 +37,7 @@ public:
 	void update( const float fTimeDeltaSeconds );
 
 	bool soundIsLoaded( const int soundId );
-	void loadSound( const int soundId, const void* data = nullptr );
+	void loadSound( const int soundId, const void* data = nullptr, const size_t dataSize = 0 );
 	void unloadSound( const int soundId );
 
 	float dBToVolume( const float dB )
@@ -302,7 +302,7 @@ bool UAEImplementation::soundIsLoaded( const int soundId )
 	return false;
 }
 
-void UAEImplementation::loadSound( const int soundId, const void* data )
+void UAEImplementation::loadSound( const int soundId, const void* data, const size_t dataSize )
 {
 	if ( soundIsLoaded( soundId ) )
 	{
@@ -324,7 +324,21 @@ void UAEImplementation::loadSound( const int soundId, const void* data )
 	::FMOD::Sound* sound = nullptr;
 	if ( uSound->useBinaryData )
 	{
-		checkErrors( system->createSound( (const char*) data, eMode, nullptr, &sound ) );
+		eMode |= ( FMOD_OPENRAW | FMOD_OPENMEMORY );
+
+		int numchannels = 1;
+		int frequency = 44100;
+
+		FMOD_CREATESOUNDEXINFO sndinfo = { 0 };
+		sndinfo.format = FMOD_SOUND_FORMAT_PCM16;
+		sndinfo.numchannels = numchannels;
+		sndinfo.defaultfrequency = frequency;
+		sndinfo.cbsize = sizeof( sndinfo );
+		sndinfo.length = dataSize;
+
+		// TODO: read wav header and create sndinfo with that data.
+
+		checkErrors( system->createSound( (const char*) data, eMode, &sndinfo, &sound ) );
 	}
 	else
 	{
@@ -410,9 +424,9 @@ void UAudioEngine::unregisterSound( const int soundId )
 	implementationPtr->sounds.erase( soundId );
 }
 
-void UAudioEngine::loadSound( const int soundId, const bool b3d, const bool bLooping, const bool bStream, const void* data )
+void UAudioEngine::loadSound( const int soundId, const bool b3d, const bool bLooping, const bool bStream, const void* data, const size_t dataSize )
 {
-	implementationPtr->loadSound( soundId, data );
+	implementationPtr->loadSound( soundId, data, dataSize );
 }
 
 void UAudioEngine::unLoadSound( const int soundId )
