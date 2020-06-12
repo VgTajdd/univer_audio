@@ -1,6 +1,7 @@
 #include <iostream>
-
 #include <thread>
+
+#include "utils/FileLoaderHelper.h"
 
 #include "UAudioEngine.h"
 
@@ -177,6 +178,39 @@ int main()
 				break;
 			}
 		}
+	}
+
+	std::cin.get();
+	std::cout << "Demo 3" << std::endl;
+	{
+		auto binary_data = univer::read_file( "assets/deepbark.wav" );
+
+		univer::audio::UAudioEngine audioEngine;
+		audioEngine.init();
+
+		float position[3] = { 0, 0, 0 };
+		float look[3] = { 0, 0, 1 };
+		float up[3] = { 0, 1, 0 };
+
+		audioEngine.set3dListenerAndOrientation( position, look, up );
+
+		int wauwauId = audioEngine.registerSound( "assets/deepbark.wav",
+												  1.f,
+												  1.f,
+												  100.f,
+												  true,
+												  true,
+												  false,
+												  true,
+												  true );
+
+		audioEngine.loadSound( wauwauId, true, true, false,
+							   (const char*) binary_data->data,
+							   binary_data->size );
+
+		float position1[3] = { 0, 0, 0 };
+		int channelId1 = audioEngine.playSound( wauwauId, position1, audioEngine.volumeTodB( 1.0f ) );
+		std::cin.get();
 	}
 
 	std::cin.get();
