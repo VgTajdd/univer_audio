@@ -324,20 +324,30 @@ void UAEImplementation::loadSound( const int soundId, const void* data, const si
 	::FMOD::Sound* sound = nullptr;
 	if ( uSound->useBinaryData )
 	{
-		eMode |= ( FMOD_OPENRAW | FMOD_OPENMEMORY );
-
-		int numchannels = 1;
-		int frequency = 44100;
+		int numChannels = 0;
+		float frequency = 0;
+		unsigned int lengthBytes = 0;
+		FMOD_SOUND_FORMAT format = FMOD_SOUND_FORMAT::FMOD_SOUND_FORMAT_NONE;
+		FMOD_SOUND_TYPE type = FMOD_SOUND_TYPE::FMOD_SOUND_TYPE_UNKNOWN;
+		{
+			FMOD_MODE dummyMode = eMode;
+			dummyMode |= FMOD_OPENONLY; // Just open the file, dont prebuffer or read. Good for fast opens for info, or when sound::readData is to be used.
+			::FMOD::Sound* dummy = nullptr;
+			checkErrors( system->createStream( uSound->name.c_str(), dummyMode, nullptr, &dummy ) );
+			checkErrors( dummy->getFormat( &type, &format, &numChannels, nullptr ) );
+			checkErrors( dummy->getDefaults( &frequency, nullptr ) );
+			checkErrors( dummy->getLength( &lengthBytes, FMOD_TIMEUNIT_RAWBYTES ) );
+			dummy->release();
+		}
 
 		FMOD_CREATESOUNDEXINFO sndinfo = { 0 };
-		sndinfo.format = FMOD_SOUND_FORMAT_PCM16;
-		sndinfo.numchannels = numchannels;
-		sndinfo.defaultfrequency = frequency;
+		sndinfo.format = format;
+		sndinfo.numchannels = numChannels;
+		sndinfo.defaultfrequency = (int)frequency;
 		sndinfo.cbsize = sizeof( sndinfo );
-		sndinfo.length = dataSize;
+		sndinfo.length = (unsigned int) dataSize;
 
-		// TODO: read wav header and create sndinfo with that data.
-
+		eMode |= FMOD_OPENMEMORY;
 		checkErrors( system->createSound( (const char*) data, eMode, &sndinfo, &sound ) );
 	}
 	else
