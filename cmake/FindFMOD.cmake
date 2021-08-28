@@ -1,0 +1,13 @@
+# set(FMOD_LIBRARY ${CMAKE_SOURCE_DIR}/lib/fmod-2.00/lib/x64/fmodL_vc.lib)
+set(FMOD_LIBRARY_DEBUG ${CMAKE_SOURCE_DIR}/lib/fmod-2.00/lib/x64)
+set(FMOD_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/lib/fmod-2.00/include)
+
+set(FMOD_LIBRARY_LIB_NAMES fmodL_vc)
+
+find_library(FMOD_LIBRARY_LIB
+    NAMES ${FMOD_LIBRARY_LIB_NAMES}
+    PATHS ${FMOD_LIBRARY_DEBUG}
+    PATH_SUFFIXES lib
+)
+
+message(${FMOD_LIBRARY_LIB})

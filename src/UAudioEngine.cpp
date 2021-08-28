@@ -1,4 +1,4 @@
-#include "../UAudioEngine.h"
+#include <univer_audio/UAudioEngine.h>
 #include "USound.h"
 #include "UAudioFader.h"
 
@@ -95,7 +95,7 @@ struct UChannel
 	::FMOD::Channel* m_fmodChannel;
 	int m_soundId;
 	float m_position[3];
-	float m_volumedB ;
+	float m_volumedB;
 	float m_soundVolume;
 	State m_state = State::INITIALIZE;
 	bool m_stopRequested;
@@ -134,9 +134,9 @@ void UChannel::update( float fTimeDeltaSeconds )
 			if ( tSoundIt != m_implementation.sounds.end() )
 			{
 				checkErrors( m_implementation.system->playSound( tSoundIt->second->m_fmodSound,
-																nullptr,
-																true,
-																&m_fmodChannel ) );
+																 nullptr,
+																 true,
+																 &m_fmodChannel ) );
 			}
 			if ( m_fmodChannel != nullptr )
 			{
@@ -343,7 +343,7 @@ void UAEImplementation::loadSound( const int soundId, const void* data, const si
 		FMOD_CREATESOUNDEXINFO sndinfo = { 0 };
 		sndinfo.format = format;
 		sndinfo.numchannels = numChannels;
-		sndinfo.defaultfrequency = (int)frequency;
+		sndinfo.defaultfrequency = (int) frequency;
 		sndinfo.cbsize = sizeof( sndinfo );
 		sndinfo.length = (unsigned int) dataSize;
 
