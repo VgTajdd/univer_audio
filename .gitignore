@@ -1,11 +1,2 @@
 .vs/
-x64/
-Win32/
-
-*.tlog
-*.user
-*.obj
-*.ilk
-*.log
-*.pdb
-*.exe
+build/
