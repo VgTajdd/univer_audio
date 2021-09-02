@@ -1,5 +1,6 @@
 #include <iostream>
 #include <thread>
+#include <cmath>
 
 #include "utils/FileLoaderHelper.h"
 
@@ -75,7 +76,7 @@ void Application::update( const float dt )
 
 		if ( angle < 360 )
 		{
-			float position[3] = { 5 * sin( TO_RADIANS * angle ), 0, 5 * cos( TO_RADIANS * angle ) };
+			float position[3] = { 5 * std::sin( TO_RADIANS * angle ), 0, 5 * std::cos( TO_RADIANS * angle ) };
 			m_audioEngine->setChannel3dPosition( channelId, position );
 			std::cout << angle++ << std::endl;
 			if ( angle == 360 )
