@@ -2,7 +2,7 @@
 #include "USound.h"
 #include "UAudioFader.h"
 
-#include <fmod.hpp>
+#include <fmod/fmod.hpp>
 
 #include <iostream>
 #include <map>
