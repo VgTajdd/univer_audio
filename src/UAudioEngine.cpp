@@ -2,11 +2,13 @@
 #include "USound.h"
 #include "UAudioFader.h"
 
-#include "fmod.hpp"
+#include <fmod.hpp>
 
 #include <iostream>
 #include <map>
 #include <vector>
+#include <memory>
+#include <cmath>
 
 using univer::audio::UAudioEngine;
 using univer::audio::USound;
