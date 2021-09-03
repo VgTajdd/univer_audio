@@ -5,7 +5,18 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "(gdb) Launch",
+            "name": "Debug (Windows)",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/examples/Debug/example.exe.",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/build/examples/Debug",
+            "environment": [],
+            "console": "externalTerminal"
+        },
+        {
+            "name": "Debug (Linux)",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/examples/example",
@@ -22,6 +33,14 @@
                     "ignoreFailures": true
                 }
             ]
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug (macOS)",
+            "program": "${workspaceFolder}/build/examples/example",
+            "args": [],
+            "cwd": "${workspaceFolder}/build/examples/"
         }
     ]
 }
