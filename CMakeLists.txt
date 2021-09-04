@@ -7,12 +7,8 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug)
 endif()
 
-add_library(univer_audio STATIC
-    src/UAudioEngine.cpp
-    src/UAudioEngine.cpp
-    src/UAudioFader.cpp
-    src/USound.cpp
-)
+file(GLOB UNIVER_AUDIO_SOURCES "src/*.cpp")
+add_library(univer_audio STATIC ${UNIVER_AUDIO_SOURCES})
 
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
