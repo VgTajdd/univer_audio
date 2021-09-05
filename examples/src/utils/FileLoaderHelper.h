@@ -1,3 +1,9 @@
+// ========================================================================= //
+// Copyright (c) 2021 Agustin Jesus Durand Diaz.                             //
+// This code is licensed under the Apache License 2.0.                       //
+// FileLoaderHelper.h                                                        //
+// ========================================================================= //
+
 #ifndef FILE_LOADER_HELPER_H
 #define FILE_LOADER_HELPER_H
 
