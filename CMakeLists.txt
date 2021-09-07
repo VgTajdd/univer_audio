@@ -10,7 +10,7 @@ endif()
 file(GLOB UNIVER_AUDIO_SOURCES "src/*.cpp")
 add_library(univer_audio STATIC ${UNIVER_AUDIO_SOURCES})
 
-set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 find_package(FMOD MODULE REQUIRED)
 target_link_libraries(univer_audio ${FMOD_LIBRARY_LIB})
