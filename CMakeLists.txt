@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.16.0)
 project(univer_audio VERSION 1.0)
 
 set(CMAKE_CXX_STANDARD 17)
+if (NOT WIN32)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O3 -fPIC")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -O3 -fPIC")
+endif()
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug)
