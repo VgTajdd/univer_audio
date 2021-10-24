@@ -5,8 +5,8 @@
 - [X] Use CMake
 - [X] Add copyright to files
 - [X] Add helper scripts for CMake
+- [X] Use GitHub actions
 - [ ] Add tests (gtest)
-- [ ] Use GitHub actions
 
 ## OPTIONAL
 
