@@ -519,7 +519,10 @@ void UAudioEngine::stopAllChannels()
 {
 	for ( const auto& [channelId, channel] : implementationPtr->channels )
 	{
-		channel->stop();
+		if ( isPlaying( channelId ) )
+		{
+			channel->stop();
+		}
 	}
 }
 
