@@ -15,7 +15,7 @@ USound::USound( const std::string& _name,
 				const bool _is3d,
 				const bool _isLooping,
 				const bool _isStreaming,
-				const bool _useBinaryData ):
+				const bool _useBinaryData ) :
 	name( _name ),
 	defaultVolumedB( _defaultVolumeDB ),
 	minDistance( _minDistance ),
@@ -25,7 +25,7 @@ USound::USound( const std::string& _name,
 	isStreaming( _isStreaming ),
 	m_fmodSound( nullptr ),
 	useBinaryData( _useBinaryData )
-{ }
+{}
 
 USound::~USound()
 {

@@ -1,7 +1,7 @@
-set(FMOD_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/fmod-2.00/include)
+set(FMOD_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lib/fmod-2.02/include)
 
 if(WIN32)
-    set(FMOD_LIBRARY_DEBUG ${CMAKE_CURRENT_SOURCE_DIR}/lib/fmod-2.00/lib/x64/windows)
+    set(FMOD_LIBRARY_DEBUG ${CMAKE_CURRENT_SOURCE_DIR}/lib/fmod-2.02/lib/x64/windows)
 
     set(FMOD_LIBRARY_LIB_NAMES fmodL_vc)
     set(FMOD_LIBRARY_LIB_DLL_NAMES fmodL)
@@ -22,7 +22,7 @@ if(WIN32)
     message(FMOD_LIBRARY_LIB_DLL:${FMOD_LIBRARY_LIB_DLL})
 
 else()
-    set(FMOD_LIBRARY_DEBUG ${CMAKE_CURRENT_SOURCE_DIR}/lib/fmod-2.00/lib/x64/linux)
+    set(FMOD_LIBRARY_DEBUG ${CMAKE_CURRENT_SOURCE_DIR}/lib/fmod-2.02/lib/x64/linux)
     set(FMOD_LIBRARY_LIB_NAMES fmodL)
 
     find_library(FMOD_LIBRARY_LIB

@@ -15,10 +15,10 @@ UAudioFader::UAudioFader() :
 	m_finalVolume( 0.f ),
 	m_initialVolume( 0.f ),
 	m_maxFadeTime( 0.f )
-{ }
+{}
 
 UAudioFader::~UAudioFader()
-{ }
+{}
 
 void UAudioFader::update( const float dt )
 {
