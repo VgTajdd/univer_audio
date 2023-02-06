@@ -78,10 +78,10 @@ struct UChannel
 			  const float fVolumedB ) :
 		m_implementation( tImplementation ),
 		m_fmodChannel( nullptr ),
-		m_stopRequested( false ),
 		m_soundId( soundId ),
 		m_soundVolume( fVolumedB ),
-		m_state( State::INITIALIZE )
+		m_state( State::INITIALIZE ),
+		m_stopRequested( false )
 	{
 		std::copy( vPosition, vPosition + 3, m_position );
 		m_stopFader.setInitialVolume( m_implementation.dBToVolume( getVolumedB() ) );
@@ -455,7 +455,7 @@ void UAudioEngine::unLoadSound( const int soundId )
 int UAudioEngine::playSound( const int soundId, const float vPosition[3], const float fVolumedB )
 {
 	int channelId = implementationPtr->nextChannelId++;
-	auto tSoundIt = implementationPtr->sounds.find( soundId );
+	// auto tSoundIt = implementationPtr->sounds.find( soundId );
 	if ( !implementationPtr->soundIsLoaded( soundId ) )
 	{
 		loadSound( soundId );

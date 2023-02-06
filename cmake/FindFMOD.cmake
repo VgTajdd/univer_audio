@@ -21,6 +21,18 @@ if(WIN32)
     message(FMOD_LIBRARY_LIB:${FMOD_LIBRARY_LIB})
     message(FMOD_LIBRARY_LIB_DLL:${FMOD_LIBRARY_LIB_DLL})
 
+elseif(APPLE)
+    set(FMOD_LIBRARY_DEBUG ${CMAKE_CURRENT_SOURCE_DIR}/lib/fmod-2.02/lib/x64/macOS)
+    set(FMOD_LIBRARY_LIB_NAMES fmod)
+
+    find_library(FMOD_LIBRARY_LIB
+        NAMES ${FMOD_LIBRARY_LIB_NAMES}
+        PATHS ${FMOD_LIBRARY_DEBUG}
+        PATH_SUFFIXES dylib
+    )
+
+    message(FMOD_LIBRARY_LIB:${FMOD_LIBRARY_LIB})
+
 else()
     set(FMOD_LIBRARY_DEBUG ${CMAKE_CURRENT_SOURCE_DIR}/lib/fmod-2.02/lib/x64/linux)
     set(FMOD_LIBRARY_LIB_NAMES fmodL)

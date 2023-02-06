@@ -5,7 +5,7 @@
 // ========================================================================= //
 
 #include <stdio.h>
-#include <malloc.h>
+#include <stdlib.h>
 #include "FileLoaderHelper.h"
 
 // Returns a binary_data_t structure if reading the file was OK.

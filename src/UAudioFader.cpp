@@ -12,8 +12,8 @@ UAudioFader::UAudioFader() :
 	m_isFinished( false ),
 	m_isStarted( false ),
 	m_fadeTime( 0.f ),
-	m_finalVolume( 0.f ),
 	m_initialVolume( 0.f ),
+	m_finalVolume( 0.f ),
 	m_maxFadeTime( 0.f )
 {}
 

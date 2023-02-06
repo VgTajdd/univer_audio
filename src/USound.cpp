@@ -23,8 +23,8 @@ USound::USound( const std::string& _name,
 	is3d( _is3d ),
 	isLooping( _isLooping ),
 	isStreaming( _isStreaming ),
-	m_fmodSound( nullptr ),
-	useBinaryData( _useBinaryData )
+	useBinaryData( _useBinaryData ),
+	m_fmodSound( nullptr )
 {}
 
 USound::~USound()
