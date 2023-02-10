@@ -1,8 +1,10 @@
 # UNIVER AUDIO
 
-Audio engine for Univer Game Engine in C++ using FMOD API.
+Audio module developed in C++ for Univer Game Engine using FMOD API.
 
 [![CMake-CI](https://github.com/VgTajdd/univer_audio/actions/workflows/cmake.yml/badge.svg)](https://github.com/VgTajdd/univer_audio/actions/workflows/cmake.yml)
+
+![univer_logo](https://user-images.githubusercontent.com/51887591/218179773-13fd9fa4-677b-4306-ac1b-a27c4935f82b.png)
 
 ## Usage
 
