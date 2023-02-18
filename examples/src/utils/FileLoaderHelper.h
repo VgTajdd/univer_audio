@@ -1,5 +1,5 @@
 // ========================================================================= //
-// Copyright (c) 2021 Agustin Jesus Durand Diaz.                             //
+// Copyright (c) 2023 Agustin Jesus Durand Diaz.                             //
 // This code is licensed under the Apache License 2.0.                       //
 // FileLoaderHelper.h                                                        //
 // ========================================================================= //
@@ -9,20 +9,20 @@
 
 #ifdef __cplusplus
 extern "C" {
-namespace univer
-{
+	namespace univer
+	{
 #endif
 
-typedef struct binary_data_t binary_data_t;
-struct binary_data_t
-{
-    long size;
-    void* data;
-};
-binary_data_t* read_file( const char* filename );
+	typedef struct binary_data_t binary_data_t;
+	struct binary_data_t
+	{
+		long size;
+		void* data;
+	};
+	binary_data_t* read_file( const char* filename );
 
 #ifdef __cplusplus
-}
+	}
 }
 #endif
 
