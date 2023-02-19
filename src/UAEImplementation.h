@@ -16,6 +16,7 @@
 #include <vector>
 #include <memory>
 #include <iostream>
+#include <cmath>
 
 namespace univer::audio
 {
@@ -35,12 +36,12 @@ public:
 
 	float dBToVolume( const float dB )
 	{
-		return powf( 10.0f, 0.05f * dB );
+		return std::pow( 10.0f, 0.05f * dB );
 	}
 
 	float volumeTodB( const float volume )
 	{
-		return 20.0f * log10f( volume );
+		return 20.0f * std::log10( volume );
 	}
 
 public:
