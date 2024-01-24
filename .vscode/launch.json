@@ -13,7 +13,8 @@
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/build/examples/Debug",
             "environment": [],
-            "console": "externalTerminal"
+            "console": "externalTerminal",
+            "preLaunchTask": "${defaultBuildTask}"
         },
         {
             "name": "Debug (Linux)",
@@ -32,7 +33,8 @@
                     "text": "-enable-pretty-printing",
                     "ignoreFailures": true
                 }
-            ]
+            ],
+            "preLaunchTask": "${defaultBuildTask}"
         },
         {
             "type": "lldb",
@@ -40,7 +42,8 @@
             "name": "Debug (macOS)",
             "program": "${workspaceFolder}/build/examples/example",
             "args": [],
-            "cwd": "${workspaceFolder}/build/examples/"
+            "cwd": "${workspaceFolder}/build/examples/",
+            "preLaunchTask": "${defaultBuildTask}"
         }
     ]
 }
