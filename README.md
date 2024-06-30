@@ -32,17 +32,18 @@ Run the example:
 
 - For ```macOS``` and ```Linux```:
 
-    ```bash
-    cd build/bin
-    ./example
-    ```
+```bash
+cd build/bin
+./example
+```
 
 - For ```Windows```:
 
-    ```bash
-    cd build/bin/Debug
-    example.exe
-    ```
+```bash
+cd build/bin/Debug
+example.exe
+```
+
 ## Contributing
 
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
